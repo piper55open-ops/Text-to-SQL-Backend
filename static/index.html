@@ -48,7 +48,7 @@
 
         // 增加一个“正在思考”的提示
         const loadingId = 'loading-' + Date.now();
-        chatBox.innerHTML += `<div id="${loadingId}" class="message ai-msg"><em>🧠 AI 正在疯狂查询数据库...</em></div>`;
+        chatBox.innerHTML += `<div id="${loadingId}" class="message ai-msg"><em>  AI 正在查询数据库...</em></div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
 
         sendBtn.disabled = true; // 锁定按钮防止连点
