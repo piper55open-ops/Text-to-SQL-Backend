@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Piper 的原生全栈 AI 系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .chat-container { width: 100%; max-width: 800px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0AI,0,0.1); padding: 20px; }
+        .chat-box { height: 500px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 20px; background: #fafafa; }
+        .message { margin-bottom: 15px; padding: 10px; border-radius: 5px; }
+        .user-msg { background: #e3f2fd; color: #0d47a1; border-left: 4px solid #1976d2; }
+        .ai-msg { background: #f1f8e9; color: #1b5e20; border-left: 4px solid #388e3c; }
+        .input-area { display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { padding: 12px 24px; background: #1976d2; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #1565c0; }
+        pre { background: #2d2d2d; color: #ccc; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <h2 style="text-align: center; color: #333;">✨ Piper 的全栈 AI 系统 (Flask 版)</h2>
+
+    <div class="chat-box" id="chatBox">
+        <div class="message ai-msg">你好！我是你的原生 AI 助手，连接正常。想查什么订单？</div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="例如：查一下 Piper 的所有订单" onkeypress="handleEnter(event)">
+        <button onclick="askAI()" id="sendBtn">发送查询</button>
+    </div>
+</div>
+
+<script>
+    async function askAI() {
+        const inputField = document.getElementById('userInput');
+        const chatBox = document.getElementById('chatBox');
+        const sendBtn = document.getElementById('sendBtn');
+        const question = inputField.value.trim();
+
+        if (!question) return;
+
+        // 1. 把用户的问题画到屏幕上
+        chatBox.innerHTML += `<div class="message user-msg"><strong>你：</strong> ${question}</div>`;
+        inputField.value = '';
+
+        // 增加一个“正在思考”的提示
+        const loadingId = 'loading-' + Date.now();
+        chatBox.innerHTML += `<div id="${loadingId}" class="message ai-msg"><em>🧠 AI 正在疯狂查询数据库...</em></div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        sendBtn.disabled = true; // 锁定按钮防止连点
+
+        try {
+            // 2. 发起 Fetch 请求，敲开 Flask 的 API 接口大门
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question }) // 把问题转成 JSON 发过去
+            });
+
+            const data = await response.json();
+
+            // 3. 把 Flask 返回的 Markdown 结果渲染成 HTML 并显示
+            document.getElementById(loadingId).remove(); // 删掉 loading
+            chatBox.innerHTML += `<div class="message ai-msg"><strong>AI：</strong> ${marked.parse(data.answer)}</div>`;
+
+        } catch (error) {
+            document.getElementById(loadingId).remove();
+            chatBox.innerHTML += `<div class="message ai-msg" style="color: red;"><strong>系统错误：</strong> 网络连接失败 ${error}</div>`;
+        }
+
+        sendBtn.disabled = false;
+        chatBox.scrollTop = chatBox.scrollHeight; // 自动滚动到底部
+    }
+
+    // 支持回车键发送
+    function handleEnter(e) {
+        if (e.key === 'Enter') askAI();
+    }
+</script>
+
+</body>
+</html>
