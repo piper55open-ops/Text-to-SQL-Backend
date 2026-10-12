@@ -14,21 +14,37 @@ def home():
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """这是前后端通信的秘密通道 (API 接口)"""
-    # 1. 接收前端发来的 JSON 数据
-    data = request.json
-    user_question = data.get('question')
+
+    if not request.is_json:
+        return jsonify({"error": "请求必须是JSON"}), 400
+
+    data = request.get_json()
+
+    if not isinstance(data, dict):
+        return jsonify({"error": "JSON必须是对象"}), 400
+
+    user_question = data.get("question")
+
+    if not isinstance(user_question, str):
+        return jsonify({"error": "没收到问题呀"}), 400
+
+    user_question = user_question.strip()
 
     if not user_question:
         return jsonify({"error": "没收到问题呀"}), 400
 
     print(f"收到前端提问: {user_question}")
 
-    # 2. 调用咱们的 AI 大脑算结果
-    answer = run_agent_for_web(user_question)
+    try:
+        answer = run_agent_for_web(user_question)
+    except Exception:
+        return jsonify({"error": "服务器内部错误"}), 500
 
-    # 3. 把结果打包成 JSON 扔回给前端
     return jsonify({"answer": answer})
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
 
 
 if __name__ == '__main__':

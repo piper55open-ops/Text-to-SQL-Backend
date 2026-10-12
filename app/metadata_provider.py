@@ -1,16 +1,20 @@
 import psycopg2
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def get_database_schema():
     """使用 admin 账号连接数据库，自动抓取表结构和字段信息"""
     try:
         # 这里用 admin 房东账号去查系统表
         conn = psycopg2.connect(
-            host="localhost",
-            database="enterprise_data",
-            user="admin",
-            password="secret123"  # 昨天咱们设的密码
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_DATABASE", "enterprise_data"),
+            user=os.getenv("DB_USER", "admin"),
+            password=os.getenv("DB_PASSWORD"),
         )
+
         cur = conn.cursor()
         # 查询 public 架构下所有的表和字段
         cur.execute("""
